@@ -5,19 +5,14 @@ from ctypes import cdll
 from ctypes.util import find_library
 
 class VoxelsEMD:
-    """AI is creating summary for 
-
-    Returns:
-        [type]: [description]
-    """
     libm = cdll.LoadLibrary(find_library('m'))
     frams = frams
     density = 10 
     steps = 3
     verbose = False 
     reduce = True
-
-    def __init__(self, FramsPath, density = 10, steps = 3, reduce=True, verbose=False):
+    EPSILON = 0.0001
+    def __init__(self, FramsPath=None,FramsLib=None, density = 10, steps = 3, reduce=True, verbose=False):
         """ __init__
         Args:
             FramsPath (string): - path to Framstick CLI
@@ -27,7 +22,12 @@ class VoxelsEMD:
             reduce (bool, optional): If we should use reduction to remove blank samples. Defaults to True.
             verbose (bool, optional): Turning on logging, works only for calculateEMDforGeno. Defaults to False.            
         """
-        self.frams.init(FramsPath)
+        assert FramsPath != None or FramsLib != None , "You must specify FramsPath or FramsLib"
+        if FramsLib != None:
+            self.frams = FramsLib
+        elif FramsPath != None:
+            self.frams.init(FramsPath)
+            
         self.density = density
         self.steps = steps
         self.verbose = verbose
@@ -64,7 +64,7 @@ class VoxelsEMD:
         return np.sqrt(np.sum(np.square(point1-point2)))
 
     def calculateDistanceMatrix(self,array1, array2):
-        """AI is creating summary for calculateDistanceMatrix
+        """
 
         Args:
             array1 ([type]): array of size n with points representing firsts model 
@@ -121,16 +121,17 @@ class VoxelsEMD:
         x_step,y_step,z_step=step_all
         feature_array = []
         weight_array = []
-        for x in x_steps:
-            for y in y_steps :
-                for z in z_steps:
-                    rows=np.where((array[:,0]>= x) &
-                                (array[:,0]< (x+x_step)) &
-                                (array[:,1]>= y) & 
-                                (array[:,1]< (y+y_step)) &
-                                (array[:,2]>= z) &
-                                (array[:,2]< (z+z_step)))
-                    weight, point = self.calculateNeighberhood(array[rows],[(x+x_step)/2,(y+y_step)/2,(z+z_step)/2])
+        for x in range(len(x_steps[:-1])):
+            for y in range(len(y_steps[:-1])) :
+                for z in range(len(z_steps[:-1])):
+                    rows=np.where((array[:,0]> x_steps[x]) &
+                                  (array[:,0]<= x_steps[x+1]) &
+                                  (array[:,1]> y_steps[y]) & 
+                                  (array[:,1]<= y_steps[y+1]) &
+                                  (array[:,2]> z_steps[z]) &
+                                  (array[:,2]<= z_steps[z+1]))
+                    weight, point = self.calculateNeighberhood(array[rows],[x_steps[x]+(x_step/2),y_steps[y]+(y_step/2),z_steps[z]+(z_step/2)])
+
                     feature_array.append(point)
                     weight_array.append(weight)     
 
@@ -153,18 +154,23 @@ class VoxelsEMD:
         """
         if steps ==None:
             steps = self.steps
-        min_x = np.min([np.min(array1[:,0]),np.min(array2[:,0])]) - 0.0001  # 0.0001 is added and removed to deal with float values 
-        max_x = np.max([np.max(array1[:,0]),np.max(array2[:,0])]) + 0.0001
-        min_y = np.min([np.min(array1[:,1]),np.min(array2[:,1])]) - 0.0001
-        max_y = np.max([np.max(array1[:,1]),np.max(array2[:,1])]) + 0.0001
-        min_z = np.min([np.min(array1[:,2]),np.min(array2[:,2])]) - 0.0001
-        max_z = np.max([np.max(array1[:,2]),np.max(array2[:,2])]) + 0.0001
+
+        self.EPSILON = 0.0001
+        min_x = np.min([np.min(array1[:,0]),np.min(array2[:,0])]) - self.EPSILON  # 0.0001 is added and removed to deal with float values 
+        max_x = np.max([np.max(array1[:,0]),np.max(array2[:,0])]) + self.EPSILON
+        min_y = np.min([np.min(array1[:,1]),np.min(array2[:,1])]) - self.EPSILON
+        max_y = np.max([np.max(array1[:,1]),np.max(array2[:,1])]) + self.EPSILON
+        min_z = np.min([np.min(array1[:,2]),np.min(array2[:,2])]) - self.EPSILON
+        max_z = np.max([np.max(array1[:,2]),np.max(array2[:,2])]) + self.EPSILON
 
         x_steps,x_step = np.linspace(min_x,max_x,steps,retstep=True)
         y_steps,y_step = np.linspace(min_y,max_y,steps,retstep=True)
         z_steps,z_step = np.linspace(min_z,max_z,steps,retstep=True)
         
         if steps == 1:
+            x_steps = [min_x,max_x]
+            y_steps = [min_y,max_y]
+            z_steps = [min_z,max_z]
             x_step = max_x - min_x
             y_step = max_y - min_y
             z_step = max_z - min_z
@@ -269,9 +275,8 @@ class VoxelsEMD:
 
         return emd_out
 
-
     def getDissimilarityMatrix(self,listOfGeno,steps=None):
-        """AI is creating summary for getDissimilarityMatrix
+        """
 
         Args:
             listOfGeno ([string]): list of strings representing genotypes in one of the formats handled by frams http://www.framsticks.com/a/al_genotype.html
