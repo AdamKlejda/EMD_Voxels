@@ -294,21 +294,21 @@ class VoxelsEMD:
         return dissimMatrix
                 
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    path = '/home/adam/Framsticks/Framsticks50rc19'
-    e = VoxelsEMD(path)
+#     path = '/home/adam/Framsticks/Framsticks50rc19'
+#     e = VoxelsEMD(path)
     
-    print("Calculating EMDforGeno")
-    geno1 = "X"
-    geno2 = "X"
-    e.calculateEMDforGeno(geno1, geno2,steps=1)
-    e.calculateEMDforGeno(geno1, geno2,steps=4)
-    e.calculateEMDforGeno(geno1, geno2,steps=6)
-    e.calculateEMDforGeno(geno1, geno2,steps=8)
+#     print("Calculating EMDforGeno")
+#     geno1 = "X"
+#     geno2 = "X"
+#     e.calculateEMDforGeno(geno1, geno2,steps=1)
+#     e.calculateEMDforGeno(geno1, geno2,steps=4)
+#     e.calculateEMDforGeno(geno1, geno2,steps=6)
+#     e.calculateEMDforGeno(geno1, geno2,steps=8)
 
-    print("Calculating EMDforGeno")
-    list_of_genos = ["X","XX","XXX","XXXXX","XXXXCCX","XCCXXXCCX"]
-    dissim = e.getDissimilarityMatrix(list_of_genos)
+#     print("Calculating EMDforGeno")
+#     list_of_genos = ["X","XX","XXX","XXXXX","XXXXCCX","XCCXXXCCX"]
+#     dissim = e.getDissimilarityMatrix(list_of_genos)
 
-    print(dissim)
+#     print(dissim)
